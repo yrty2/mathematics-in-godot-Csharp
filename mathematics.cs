@@ -16,10 +16,16 @@ public class Mdi{
 		Math.Abs(a);
 	public static double abs(Complex a)=>
 		a.z.length;
+	public static double abs(Quat a)=>
+		a.q.length;
 	public static double sin(double a)=>
 		Math.Sin(a);
+	public static Complex sin(Complex a)=>
+		(Mdi.exp(Mdi.i*a)-Mdi.exp(-Mdi.i*a))*new Complex(0,-1/2);
 	public static double cos(double a)=>
 		Math.Cos(a);
+	public static Complex cos(Complex a)=>
+		(Mdi.exp(Mdi.i*a)+Mdi.exp(-Mdi.i*a))/2;
 	public static double tan(double a)=>
 		Math.Tan(a);
 	public static double asin(double a)=>
@@ -30,10 +36,19 @@ public class Mdi{
 		Math.Atan(a);
 	public static double sinh(double a)=>
 		Math.Sinh(a);
+	public static Complex sinh(Complex a)=>
+		(Mdi.exp(a)-Mdi.exp(-a))/2;
 	public static double cosh(double a)=>
 		Math.Cosh(a);
+	public static Complex cosh(Complex a)=>
+		(Mdi.exp(a)+Mdi.exp(-a))/2;
 	public static double tanh(double a)=>
 		Math.Tanh(a);
+	public static Complex tanh(Complex a){
+		Complex ez=Mdi.exp(a);
+		Complex mez=Mdi.exp(-a);
+		return (ez-mez)/(ez+mez);
+	}
 	public static double asinh(double a)=>
 		Math.Asinh(a);
 	public static double acosh(double a)=>
@@ -42,6 +57,16 @@ public class Mdi{
 		Math.Atanh(a);
 	public static double atan2(double a,double b)=>
 		Math.Atan2(a,b);
+	public static double max(double a,double b)=>Math.Max(a,b);
+	public static double min(double a,double b)=>Math.Min(a,b);
+	public static float min(float a,float b)=>Math.Min(a,b);
+	public static double dot(Vector a,Vector b){
+		double res=0;
+		for(int k=0; k<Mdi.max(a.dim,b.dim); ++k){
+			res+=a[k]*b[k];
+		}
+		return res;
+	}
 	public static double dot(vec2 a,vec2 b)=>
 	a.x*b.x+a.y*b.y;
 	public static double dot(vec3 a,vec3 b)=>
@@ -58,6 +83,13 @@ public class Mdi{
 	Math.Atan2(a.imag,a.real);
 	public static double arg(vec2 a)=>
 	Math.Atan2(a.y,a.x);
+	public static Vector normalize(Vector a){
+		double r=a.length;
+		if(r==0){
+			return new Vector(a.dim);
+		}
+		return a/r;
+	}
 	public static vec2 normalize(vec2 a){
 		double r=a.length;
 		if(r==0){
@@ -79,8 +111,27 @@ public class Mdi{
 		}
 		return a/r;
 	}
+	public static Complex normalize(Complex a){
+		double r=abs(a);
+		if(r==0){
+			return 0;
+		}
+		return a/r;
+	}
+	public static Quat normalize(Quat a){
+		double r=abs(a);
+		if(r==0){
+			return 0;
+		}
+		return a/r;
+	}
 	public static double exp(double a)=>Math.Exp(a);
 	public static Complex exp(Complex a)=>Math.Exp(a.real)*new Complex(Mdi.cos(a.imag),Mdi.sin(a.imag));
+	public static Quat exp(Quat a){
+		double abs=a.imag.length;
+		double sin=Mdi.sin(abs)/abs;
+		return Math.Exp(a.real)*new Quat(Mdi.cos(abs),a.i*sin,a.j*sin,a.k*sin);
+	}
 	public static double ln(double a)=>Math.Log(a);
 	public static Complex ln(Complex a)=>new Complex(Math.Log(Mdi.dot(a.z,a.z))/2,Mdi.arg(a));
 	public static Complex poler(double radius,double theta)=>radius*new Complex(Mdi.cos(theta),Mdi.sin(theta));
@@ -115,6 +166,8 @@ public struct vec2{
 	new vec2(a.x+b.x,a.y+b.y);
 	public static vec2 operator -(vec2 a, vec2 b)=>
 	new vec2(a.x-b.x,a.y-b.y);
+	public static vec2 operator -(vec2 a)=>
+	new vec2(-a.x,-a.y);
 	public static vec2 operator *(vec2 a, vec2 b)=>
 	new vec2(a.x*b.x,a.y*b.y);
 	public static vec2 operator /(vec2 a, vec2 b)=>
@@ -128,7 +181,6 @@ public struct vec2{
 		new vec3(x,y,a);
 	public override string ToString() => $"({x},{y})";
 }
-
 public struct vec3{
 	public double x;
 	public double y;
@@ -154,6 +206,8 @@ public struct vec3{
 	new vec3(a.x+b.x,a.y+b.y,a.z+b.z);
 	public static vec3 operator -(vec3 a, vec3 b)=>
 	new vec3(a.x-b.x,a.y-b.y,a.z-b.z);
+	public static vec3 operator -(vec3 a)=>
+	new vec3(-a.x,-a.y,-a.z);
 	public static vec3 operator *(vec3 a, vec3 b) =>
 	new vec3(a.x*b.x,a.y*b.y,a.z*b.z);
 	public static vec3 operator /(vec3 a, vec3 b) =>
@@ -249,6 +303,8 @@ public struct vec4{
 	new vec4(a.x+b.x,a.y+b.y,a.z+b.z,a.w+b.w);
 	public static vec4 operator -(vec4 a, vec4 b)=>
 	new vec4(a.x-b.x,a.y-b.y,a.z-b.z,a.w-b.w);
+	public static vec4 operator -(vec4 a)=>
+	new vec4(-a.x,-a.y,-a.z,-a.w);
 	public static vec4 operator *(vec4 a, vec4 b) =>
 	new vec4(a.x*b.x,a.y*b.y,a.z*b.z,a.w*b.w);
 	public static vec4 operator /(vec4 a, vec4 b) =>
@@ -328,6 +384,91 @@ public struct vec4{
 	}
 	public override string ToString() => $"({x},{y},{z},{w})";
 }
+public struct Vector{
+	double[] data;
+	public double[] raw=>data;
+	public int dim=>data.Length;
+	public double length=>Mdi.sqrt(Mdi.dot(this,this));
+	public Vector(int a){
+		data=new double[a];
+	}
+	public Vector(params double[] values){
+		data=values;
+	}
+	public double this[int i]{
+		get{
+			if(i<dim){
+				return data[i];
+			}
+			return 0;
+		}
+		set=>data[i]=value;
+	}
+	public static implicit operator Vector(double x)=>
+	new Vector(x);
+	public static implicit operator Vector((double,double) t)=>
+	new Vector(t.Item1,t.Item2);
+	public static implicit operator Vector((double,double,double) t)=>
+	new Vector(t.Item1,t.Item2,t.Item3);
+	public static implicit operator Vector((double,double,double,double) t)=>
+	new Vector(t.Item1,t.Item2,t.Item3,t.Item4);
+	public static implicit operator Vector((double,double,double,double,double) t)=>
+	new Vector(t.Item1,t.Item2,t.Item3,t.Item4,t.Item5);
+	public static implicit operator Vector((double,double,double,double,double,double) t)=>
+	new Vector(t.Item1,t.Item2,t.Item3,t.Item4,t.Item5,t.Item6);
+	//演算子など
+	public static Vector operator +(Vector a,Vector b){
+		Vector res=new Vector(Math.Max(a.dim,b.dim));
+		for(int k=0; k<res.dim; ++k){
+			res[k]=a[k]+b[k];
+		}
+		return res;
+	}
+	public static Vector operator -(Vector a,Vector b){
+		Vector res=new Vector(Math.Max(a.dim,b.dim));
+		for(int k=0; k<res.dim; ++k){
+			res[k]=a[k]-b[k];
+		}
+		return res;
+	}
+	public static Vector operator *(Vector a,Vector b){
+		Vector res=new Vector(Math.Max(a.dim,b.dim));
+		for(int k=0; k<res.dim; ++k){
+			res[k]=a[k]*b[k];
+		}
+		return res;
+	}
+	public static Vector operator *(Vector a,double b){
+		Vector res=new Vector(a.dim);
+		for(int k=0; k<res.dim; ++k){
+			res[k]=a[k]*b;
+		}
+		return res;
+	}
+	public static Vector operator *(double a,Vector b){
+		Vector res=new Vector(b.dim);
+		for(int k=0; k<res.dim; ++k){
+			res[k]=a*b[k];
+		}
+		return res;
+	}
+	public static Vector operator /(Vector a,Vector b){
+		Vector res=new Vector(Math.Max(a.dim,b.dim));
+		for(int k=0; k<res.dim; ++k){
+			res[k]=a[k]/b[k];
+		}
+		return res;
+	}
+	public static Vector operator /(Vector a,double b){
+		Vector res=new Vector(a.dim);
+		for(int k=0; k<res.dim; ++k){
+			res[k]=a[k]/b;
+		}
+		return res;
+	}
+	public static double operator |(Vector a,Vector b)=>Mdi.dot(a,b);
+	public override string ToString()=>"("+string.Join(",",data)+")";
+}
 
 public struct Complex{
 	public vec2 z;
@@ -352,12 +493,18 @@ public struct Complex{
 	new Complex(a.z+b.z);
 	public static Complex operator -(Complex a, Complex b)=>
 	new Complex(a.z-b.z);
+	public static Complex operator -(Complex a)=>
+	new Complex(-a.z);
 	public static Complex operator *(Complex a, Complex b)=>
 	new Complex(a.real*b.real-a.imag*b.imag,a.real*b.imag+a.imag*b.real);
 	public static Complex operator *(Complex a, double b)=>
 	new Complex(b*a.real,b*a.imag);
 	public static Complex operator *(double a, Complex b)=>
 	new Complex(a*b.real,a*b.imag);
+	public static Complex operator /(Complex a, Complex b)=>
+	a*~b/Mdi.dot(b.z,b.z);
+	public static Complex operator /(Complex a, double b)=>
+	new Complex(a.real/b,a.imag/b);
 	public static Complex operator ~(Complex a)=>
 	Mdi.conj(a);
 	public static Complex operator ^(Complex a,Complex b)=>
@@ -369,23 +516,25 @@ public struct Complex{
 
 	public override string ToString() => $"{z.x}+{z.y}i";
 }
-public struct Quaternion{
+public struct Quat{
 	public vec4 q;
 
-	public Quaternion(double real, double i,double j,double k){
+	public Quat(double real, double i,double j,double k){
 		q=new vec4(real,i,j,k);
 	}
-	public Quaternion(double real,vec3 v){
+	public Quat(double real,vec3 v){
 		q=new vec4(real,v.x,v.y,v.z);
 	}
-	public Quaternion(vec4 Q){
+	public Quat(vec4 Q){
 		q=Q;
 	}
-	public Quaternion(Complex v){
+	public Quat(Complex v){
 		q=new vec4(v.real,v.imag,0,0);//所説あり
 	}
-	public static implicit operator Quaternion(double real)=>
-	new Quaternion(real,0,0,0);
+	public static implicit operator Quat(double real)=>
+	new Quat(real,0,0,0);
+	public static implicit operator Quat((double,double,double,double) t)=>
+	new Quat(t.Item1,t.Item2,t.Item3,t.Item4);
 	
 	public double real=>q.x;
 	public vec3 imag=>new vec3(q.y,q.z,q.w);
@@ -393,12 +542,20 @@ public struct Quaternion{
 	public double j=>q.z;
 	public double k=>q.w;
 	
-	public static Quaternion operator +(Quaternion a,Quaternion b)=>
-	new Quaternion(a.q+b.q);
-	public static Quaternion operator -(Quaternion a,Quaternion b)=>
-	new Quaternion(a.q-b.q);
-	public static Quaternion operator *(Quaternion a,Quaternion b)=>
-	new Quaternion(a.real*b.q+new vec4(-(a.q.yzw|b.q.yzw),a.q.yzw^b.q.yzw)+b.real*a.q.yzw);
+	public static Quat operator +(Quat a,Quat b)=>
+	new Quat(a.q+b.q);
+	public static Quat operator -(Quat a,Quat b)=>
+	new Quat(a.q-b.q);
+	public static Quat operator -(Quat a)=>
+	new Quat(-a.q);
+	public static Quat operator *(Quat a,Quat b)=>
+	new Quat(a.real*b.q+new vec4(-(a.q.yzw|b.q.yzw),a.q.yzw^b.q.yzw)+b.real*a.q.yzw);
+	public static Quat operator *(Quat a,double b)=>
+	new Quat(a.q*b);
+	public static Quat operator *(double a,Quat b)=>
+	new Quat(a*b.q);
+	public static Quat operator /(Quat a,double b)=>
+	new Quat(a.q/b);
 
 	public override string ToString() => $"{q.x}+{q.y}i+{q.z}j+{q.w}k";
 }
